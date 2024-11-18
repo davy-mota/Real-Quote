@@ -1,7 +1,8 @@
 import flet as ft
 import pyrebase
-from get_price import get_currency_quote
-
+from get_price import get_currency_quote, get_currency_quote_week
+class State:
+    toggle = True
 
 firebaseConfig = {
   'apiKey': "AIzaSyB9JN6MNaaeLuNdVOwSlWfNfSciiK0Z5Xc",
@@ -17,11 +18,15 @@ firebaseConfig = {
 firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 
+s = State()
+
+
 def main(page: ft.Page):
     page.title = "Login Mobile"
     page.padding = 20
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.scroll = ft.ScrollMode.AUTO
+    page.theme_mode = ft.ThemeMode.DARK
 
     # Função de Login
     def login(e):
@@ -138,6 +143,16 @@ def main(page: ft.Page):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             )
         )
+    def coin_origin(event):
+        global value_coin_origin
+        value_coin_origin = event.control.value
+    def coin_destination(event):
+        global value_coin_destination
+        value_coin_destination = event.control.value
+
+
+
+
     def load_main_screen():
         page.controls.clear()  # Limpa os controles da tela de login
         menubar_coin_origin = ft.Dropdown(
@@ -148,7 +163,8 @@ def main(page: ft.Page):
                 ft.dropdown.Option("USD"),
                 ft.dropdown.Option("BTC"),
                 ft.dropdown.Option("EUR"),
-            ]
+            ],
+            on_change = coin_origin
         )
         menubar_coin_destination = ft.Dropdown(
             label="Moeda de Destino",
@@ -158,19 +174,48 @@ def main(page: ft.Page):
                 ft.dropdown.Option("USD"),
                 ft.dropdown.Option("BTC"),
                 ft.dropdown.Option("EUR"),
-            ]
+            ],
+            on_change=coin_destination
         )
+
+
+        global text_currency
+        global value_conversion
+
+
         value_conversion = ft.TextField(label="Digite o valor para a conversão", width=page.window_width * 0.8, keyboard_type=ft.KeyboardType.NUMBER,)
-        text_currency = ft.Text("", size=30, weight="bold", color="green")
+        value_currency = ft.Text("", size=30, weight="bold", color="green")
+        text_currency = ft.Text("",size=15, weight="bold", color="white")
 
-        def convert_currency():
-            coin_origin = menubar_coin_origin.value()
-            coin_destination = menubar_coin_destination.value()
-            value = value_conversion.value()
 
-            if coin_origin and coin_destination:
-                currency = get_currency_quote(coin_origin, coin_destination)
-                text_currency.configure(text=f"1 {coin_origin} = {value}*{currency}")
+        def convert_currency(event):
+            selection_coin_origin = value_coin_origin
+            selection_coin_destination = value_coin_destination
+            currency = get_currency_quote(selection_coin_destination, selection_coin_origin)
+            currency = float(currency) * float(value_conversion.value)
+            value_currency.value = f"{currency:.2f} {selection_coin_origin}"
+            text_currency.value = f"Para ter {value_conversion.value} {selection_coin_destination} você precisa de {currency:.2f} {selection_coin_origin}"
+            page.update()
+
+        valores_iniciais = [10, 20, 30, 40, 50]
+
+        def gerar_data_points(valores):
+            return [ft.chart.DataPoint(x=i, y=valor) for i, valor in enumerate(valores)]
+
+        data_points = gerar_data_points(valores_iniciais)
+        serie_dados = ft.chart.LineChartSeries(
+            name="Valores",
+            data_points=data_points,
+        )
+        grafico = ft.LineChart(
+            series=[serie_dados],
+            min_x=0,
+            max_x=10,
+            min_y=0,
+            max_y=60,
+            width=600,
+            height=400,
+        )
 
         page.add(
             ft.Column(
@@ -180,8 +225,10 @@ def main(page: ft.Page):
                     menubar_coin_origin,
                     menubar_coin_destination,
                     value_conversion,
-                    ft.ElevatedButton(text="Converter", on_click=convert_currency()),
-
+                    ft.ElevatedButton(text="Converter", on_click=convert_currency),
+                    value_currency,
+                    text_currency,
+                    grafico
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
