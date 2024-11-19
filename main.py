@@ -1,8 +1,7 @@
 import flet as ft
 import pyrebase
 from get_price import get_currency_quote, get_currency_quote_week
-class State:
-    toggle = True
+
 
 firebaseConfig = {
   'apiKey': "AIzaSyB9JN6MNaaeLuNdVOwSlWfNfSciiK0Z5Xc",
@@ -18,7 +17,6 @@ firebaseConfig = {
 firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 
-s = State()
 
 
 def main(page: ft.Page):
@@ -197,25 +195,7 @@ def main(page: ft.Page):
             text_currency.value = f"Para ter {value_conversion.value} {selection_coin_destination} você precisa de {currency:.2f} {selection_coin_origin}"
             page.update()
 
-        valores_iniciais = [10, 20, 30, 40, 50]
 
-        def gerar_data_points(valores):
-            return [ft.chart.DataPoint(x=i, y=valor) for i, valor in enumerate(valores)]
-
-        data_points = gerar_data_points(valores_iniciais)
-        serie_dados = ft.chart.LineChartSeries(
-            name="Valores",
-            data_points=data_points,
-        )
-        grafico = ft.LineChart(
-            series=[serie_dados],
-            min_x=0,
-            max_x=10,
-            min_y=0,
-            max_y=60,
-            width=600,
-            height=400,
-        )
 
         page.add(
             ft.Column(
@@ -227,8 +207,7 @@ def main(page: ft.Page):
                     value_conversion,
                     ft.ElevatedButton(text="Converter", on_click=convert_currency),
                     value_currency,
-                    text_currency,
-                    grafico
+                    text_currency
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -240,5 +219,5 @@ def main(page: ft.Page):
     # Inicialmente, carrega a tela de login
     load_login_screen()
 
-# Executar a aplicação
-ft.app(target=main)
+if __name__ == "__main__":
+    ft.app(target=main)
